@@ -1,4 +1,5 @@
 from sklearn.metrics import mean_squared_error
+import torch
 from neural_network import NeuralNetworkWrapper
 
 class ExperimentRunner:
@@ -17,13 +18,17 @@ class ExperimentRunner:
         self.neural_network = NeuralNetworkWrapper(input_size)
         self.target_column = target_column
 
-    def get_dataset_sample_information(self, full_data):
+    def compute_characteristics(self, full_data):
         """
-        This takes in a dataset and gets statastics on it for us to classify
+        This takes in a dataset and gets statistics on it for us to classify
         """
-        # TODO: decide which metrics to actually do this for
-        # TODO: Sidd, let me know what you had in mind!
-        pass
+        characteristics = {}
+        characteristics['mean'] = full_data.mean().to_dict()
+        characteristics['std'] = full_data.std().to_dict()
+        characteristics['min'] = full_data.min().to_dict()
+        characteristics['max'] = full_data.max().to_dict()
+        characteristics['median'] = full_data.median().to_dict()
+        return characteristics
 
     def train_network(self, train_data):
         """
@@ -33,8 +38,13 @@ class ExperimentRunner:
         # Use train data to train the neural network
         inputs = train_data.drop(columns=[self.target_column]).to_numpy()
         targets = train_data[self.target_column].to_numpy()
+
+        # Convert inputs and targets to PyTorch tensors
+        inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
+        targets_tensor = torch.tensor(targets, dtype=torch.float32).unsqueeze(1)
+
         # Pass this information into the neural network
-        self.neural_network.train(inputs, targets)
+        self.neural_network.train(inputs_tensor, targets_tensor)
 
     def benchmark_network(self, test_data):
         """
@@ -44,10 +54,13 @@ class ExperimentRunner:
         # Split test data
         inputs = test_data.drop(columns=[self.target_column]).to_numpy()
         targets = test_data[self.target_column].to_numpy()
+
+        # Convert inputs to PyTorch tensor
+        inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
+
         # Get the predictions
-        predictions = self.neural_network.predict(inputs)
+        predictions = self.neural_network.predict(inputs_tensor).detach().numpy()
+
         # Benchmark using the mean squared error
         mse = mean_squared_error(targets, predictions)
         return mse
-
-    
