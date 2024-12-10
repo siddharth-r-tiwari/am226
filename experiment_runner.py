@@ -39,12 +39,8 @@ class ExperimentRunner:
         inputs = train_data.drop(columns=[self.target_column]).to_numpy()
         targets = train_data[self.target_column].to_numpy()
 
-        # Convert inputs and targets to PyTorch tensors
-        inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
-        targets_tensor = torch.tensor(targets, dtype=torch.float32).unsqueeze(1)
-
         # Pass this information into the neural network
-        self.neural_network.train(inputs_tensor, targets_tensor)
+        self.neural_network.train(inputs, targets)
 
     def benchmark_network(self, test_data):
         """
@@ -55,12 +51,11 @@ class ExperimentRunner:
         inputs = test_data.drop(columns=[self.target_column]).to_numpy()
         targets = test_data[self.target_column].to_numpy()
 
-        # Convert inputs to PyTorch tensor
-        inputs_tensor = torch.tensor(inputs, dtype=torch.float32)
-
         # Get the predictions
-        predictions = self.neural_network.predict(inputs_tensor).detach().numpy()
+        predictions = self.neural_network.predict(inputs).detach().numpy()
 
         # Benchmark using the mean squared error
         mse = mean_squared_error(targets, predictions)
         return mse
+
+    
