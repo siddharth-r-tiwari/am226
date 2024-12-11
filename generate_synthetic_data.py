@@ -69,7 +69,15 @@ class GenerateSyntheticData:
         response = model.generate_content(prompt)
 
         # Extract and validate the generated JSON
-        generated_json = response.text  # Assuming `response.text` contains the JSON
-
-        # Convert to pandas DataFrame
-        return generated_json
+        generated_json = response.text
+        # Ensure the generated JSON starts with '[' and ends with ']'
+        start_index = generated_json.find('[')
+        end_index = generated_json.rfind(']') + 1
+        print(start_index, end_index)
+        if start_index != -1 and end_index != -1:
+            generated_json = generated_json[start_index:end_index]
+            data = json.loads(generated_json)
+            return pd.DataFrame(data)
+        else:
+            print("Failed to find valid JSON array in the response.")
+            return pd.DataFrame()  # Return an empty DataFrame in case of error
