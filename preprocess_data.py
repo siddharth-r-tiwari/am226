@@ -1,5 +1,8 @@
 import numpy as np
 import pandas as pd
+from sklearn.decomposition import TruncatedSVD
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.pipeline import Pipeline
 
 class PreprocessData:
     def preprocess(self, data):
@@ -19,16 +22,14 @@ class PreprocessData:
         # One hot encode the data
         one_hot_encoded = pd.get_dummies(data[categorical_columns], prefix=categorical_columns)
         data = data.drop(columns=categorical_columns, axis=1).join(one_hot_encoded)
-        print(data.head())
-
-
-        return
-
-import pandas as pd
-
-data = pd.read_csv("car.csv")
-
-preprocessor = PreprocessData()
-preprocessor.preprocess(data)
-
-# Leave floats and ints
+        # Tfidf and then SVD for the other columns
+        for column in text_columns:
+            transformer = Pipeline(
+                [
+                    ("tfidf", TfidfVectorizer()),
+                    ("best", TruncatedSVD(n_components=1)),
+                ]
+            )
+            transformed_data = transformer.fit_transform(data[column])
+            data[column] = transformed_data
+        return data
