@@ -5,7 +5,8 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 
 class PreprocessData:
-    def preprocess(self, data):
+    @classmethod
+    def preprocess(cls, data):
         """
         Data is a pandas dataframe with the dtypes
         """
@@ -20,7 +21,7 @@ class PreprocessData:
                 else:
                     text_columns.append(column_name)
         # One hot encode the data
-        one_hot_encoded = pd.get_dummies(data[categorical_columns], prefix=categorical_columns)
+        one_hot_encoded = pd.get_dummies(data[categorical_columns], prefix=categorical_columns).astype(int)
         data = data.drop(columns=categorical_columns, axis=1).join(one_hot_encoded)
         # Tfidf and then SVD for the other columns
         for column in text_columns:
