@@ -6,7 +6,7 @@ from sklearn.pipeline import Pipeline
 
 class PreprocessData:
     @classmethod
-    def preprocess(cls, data):
+    def preprocess(data):
         """
         Data is a pandas dataframe with the dtypes
         """
