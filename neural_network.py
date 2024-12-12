@@ -47,12 +47,14 @@ class NeuralNetworkWrapper:
             # Backwards pass
             self.optimizer.zero_grad()
             loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             self.optimizer.step()
 
             # Can remove later when no need to print
             if (epoch + 1) % 10 == 0:
                 print(f'Epoch [{epoch+1}/{self.epochs}], Loss: {loss.item():.4f}')
-            if loss.item() == np.nan:
+            if torch.isnan(loss):
+                print("Loss is NaN. Stopping training.")
                 return False
         return True
 
