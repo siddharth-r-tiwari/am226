@@ -4,7 +4,7 @@ from neural_network import NeuralNetworkWrapper
 import pandas as pd
 import numpy as np
 from sentence_transformers import SentenceTransformer
-from scipy.spatial.distance import pdist, squareform
+from scipy.spatial.distance import pdist
 from scipy.stats import skew, kurtosis
 
 class ExperimentRunner:
@@ -89,8 +89,6 @@ class ExperimentRunner:
         # Convert list of stats to DataFrame
         return pd.DataFrame(characteristics)
 
-
-
     def train_network(self, train_data):
         """
         This uses the data to train the network
@@ -99,9 +97,8 @@ class ExperimentRunner:
         # Use train data to train the neural network
         inputs = train_data.drop(columns=[self.target_column]).to_numpy()
         targets = train_data[self.target_column].to_numpy()
-
         # Pass this information into the neural network
-        self.neural_network.train(inputs, targets)
+        return self.neural_network.train(inputs, targets)
 
     def benchmark_network(self, test_data):
         """
@@ -114,7 +111,6 @@ class ExperimentRunner:
 
         # Get the predictions
         predictions = self.neural_network.predict(inputs).detach().numpy()
-
         # Benchmark using the mean squared error
         mse = mean_squared_error(targets, predictions)
         return mse

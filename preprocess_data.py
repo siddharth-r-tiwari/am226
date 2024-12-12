@@ -5,26 +5,36 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.pipeline import Pipeline
 
 class PreprocessData:
-    @classmethod
-    def preprocess(data):
-        """
-        Data is a pandas dataframe with the dtypes
-        """
-        categorical_columns = []
-        text_columns = []
-        for column_data_type, column_name in zip(data.dtypes, data.columns):
-            if type(column_data_type) == np.dtypes.ObjectDType:
-                # Count unique columns to declare categorical
-                num_unique = len(data[column_name].unique())
-                if num_unique / len(data.index) < 0.1:
-                    categorical_columns.append(column_name)
+    def __init__(self, whole_dataset, target_column):
+        self.categorical_columns = []
+        self.text_columns = []
+        self.target_column = target_column
+
+        # Identify categorical and text columns
+        for column_data_type, column_name in zip(whole_dataset.dtypes, whole_dataset.columns):
+            if type(column_data_type) == np.dtypes.ObjectDType and column_name != self.target_column:
+                num_unique = len(whole_dataset[column_name].unique())
+                if num_unique / len(whole_dataset.index) < 0.1:
+                    self.categorical_columns.append(column_name)
                 else:
-                    text_columns.append(column_name)
-        # One hot encode the data
-        one_hot_encoded = pd.get_dummies(data[categorical_columns], prefix=categorical_columns).astype(int)
-        data = data.drop(columns=categorical_columns, axis=1).join(one_hot_encoded)
-        # Tfidf and then SVD for the other columns
-        for column in text_columns:
+                    self.text_columns.append(column_name)
+
+        # Create dummy columns for the categorical columns in the whole dataset
+        self.dummy_columns = pd.get_dummies(
+            whole_dataset[self.categorical_columns], drop_first=False
+        ).columns
+
+    def preprocess(self, data):
+        # Generate one-hot encoded columns
+        dummies = pd.get_dummies(data[self.categorical_columns], drop_first=False).astype(int)
+        # Ensure all expected columns are present
+        dummies = dummies.reindex(columns=self.dummy_columns, fill_value=0)
+
+        # Add the one-hot encoded columns to the dataframe
+        data = data.drop(columns=self.categorical_columns, axis=1).join(dummies)
+
+        # Handle text columns with a placeholder if necessary
+        for column in self.text_columns:
             transformer = Pipeline(
                 [
                     ("tfidf", TfidfVectorizer()),
@@ -33,4 +43,5 @@ class PreprocessData:
             )
             transformed_data = transformer.fit_transform(data[column])
             data[column] = transformed_data
+
         return data

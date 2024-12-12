@@ -53,11 +53,11 @@ class GenerateSyntheticData:
         return prompt
 
 
-    def predict(self, rows, data_sample):
+    def predict(self, row_multiplier, dataset_length, data_sample):
         """
         Generate synthetic data using the Gemini API.
         """
-
+        rows = row_multiplier * dataset_length
         # Create the prompt
         prompt = self.to_prompt(rows, data_sample)
         # Generate content using the Gemini model
@@ -77,3 +77,24 @@ class GenerateSyntheticData:
         except:
             print("NO VALID JSON (AH)")
             return pd.DataFrame()
+    
+    def validate(self, categorical_columns, original_dataset, synthetic_data):
+        """
+        Ensures that the cateogrical columns in the synthetic dataset are in the original 
+        """
+        # Find the categories that are wrong for the synthetic dataset
+        bad_categories = {}
+        for column in categorical_columns:
+            allowed_categories = original_dataset[column].unique()
+            synthetic_categories = synthetic_data[column].unique()
+            for cat in synthetic_categories:
+                if cat not in allowed_categories:
+                    if column in bad_categories.keys():
+                        bad_categories[column].append(cat)
+                    else:
+                        bad_categories[column] = [cat]
+        # Remove those categories
+        for column, invalid_cats in bad_categories.items():
+            synthetic_data = synthetic_data[~synthetic_data[column].isin(invalid_cats)]
+        return synthetic_data      
+    
