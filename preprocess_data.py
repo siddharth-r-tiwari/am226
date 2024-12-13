@@ -19,20 +19,22 @@ class PreprocessData:
                 else:
                     self.text_columns.append(column_name)
 
-        # Create dummy columns for the categorical columns in the whole dataset
-        self.dummy_columns = pd.get_dummies(
-            whole_dataset[self.categorical_columns], drop_first=False
-        ).columns
+        if self.categorical_columns != []:
+            # Create dummy columns for the categorical columns in the whole dataset
+            self.dummy_columns = pd.get_dummies(
+                whole_dataset[self.categorical_columns], drop_first=False
+            ).columns
 
     def preprocess(self, data):
-        # Generate one-hot encoded columns
-        dummies = pd.get_dummies(data[self.categorical_columns], drop_first=False).astype(int)
-        # Ensure all expected columns are present
-        dummies = dummies.reindex(columns=self.dummy_columns, fill_value=0)
+        if self.categorical_columns != []:
+            # Generate one-hot encoded columns
+            dummies = pd.get_dummies(data[self.categorical_columns], drop_first=False).astype(int)
+            # Ensure all expected columns are present
+            dummies = dummies.reindex(columns=self.dummy_columns, fill_value=0)
 
-        # Add the one-hot encoded columns to the dataframe
-        data = data.drop(columns=self.categorical_columns, axis=1).join(dummies)
-
+            # Add the one-hot encoded columns to the dataframe
+            data = data.drop(columns=self.categorical_columns, axis=1).join(dummies)
+        
         # Handle text columns with a placeholder if necessary
         for column in self.text_columns:
             transformer = Pipeline(

@@ -2,17 +2,29 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import random
 
-# Define the neural network
 class SimpleFeedForwardNN(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(SimpleFeedForwardNN, self).__init__()
-        self.hidden_layer = nn.Linear(input_size, hidden_size)
+        self.hidden_layer1 = nn.Linear(input_size, hidden_size)
+        self.hidden_layer2 = nn.Linear(hidden_size, hidden_size)
+        self.hidden_layer3 = nn.Linear(hidden_size, hidden_size)
+        self.hidden_layer4 = nn.Linear(hidden_size, hidden_size)
+        self.hidden_layer5 = nn.Linear(hidden_size, hidden_size)
         self.activation = nn.ReLU()
         self.output_layer = nn.Linear(hidden_size, output_size)
 
     def forward(self, x):
-        x = self.hidden_layer(x)
+        x = self.hidden_layer1(x)
+        x = self.activation(x)
+        x = self.hidden_layer2(x)
+        x = self.activation(x)
+        x = self.hidden_layer3(x)
+        x = self.activation(x)
+        x = self.hidden_layer4(x)
+        x = self.activation(x)
+        x = self.hidden_layer4(x)
         x = self.activation(x)
         x = self.output_layer(x)
         return x
@@ -51,7 +63,7 @@ class NeuralNetworkWrapper:
             self.optimizer.step()
 
             # Can remove later when no need to print
-            if (epoch + 1) % 10 == 0:
+            if (epoch + 1) % 50 == 0:
                 print(f'Epoch [{epoch+1}/{self.epochs}], Loss: {loss.item():.4f}')
             if torch.isnan(loss):
                 print("Loss is NaN. Stopping training.")
